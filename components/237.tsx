@@ -214,7 +214,7 @@ function Player({ isGameOver, setPlayerPosition, onWin, hasLost, initialPosition
   const [ref, api] = useSphere(() => ({
     mass: 1,
     type: "Dynamic",
-    position: initialPosition as [number, number, number],
+    position: [initialPosition[0], initialPosition[1], initialPosition[2]] as [number, number, number],
     args: [PLAYER_RADIUS],
   }))
 
@@ -261,7 +261,7 @@ function Player({ isGameOver, setPlayerPosition, onWin, hasLost, initialPosition
       camera.position.set(initialPosition[0], initialPosition[1], initialPosition[2])
       camera.position.y = PLAYER_HEIGHT
     }
-  }, [initialPosition, camera])
+  }, [initialPosition, camera, ref])
 
   return <mesh ref={ref} />
 }
@@ -505,8 +505,8 @@ function Snow() {
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={positions.length / 3} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-size" count={sizes.length} array={sizes} itemSize={1} />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-size" args={[sizes, 1]} />
       </bufferGeometry>
       <shaderMaterial args={[CirclePointsMaterial]} transparent depthWrite={false} />
     </points>
@@ -735,8 +735,6 @@ function Credits() {
               <p className="mb-4">SB</p>
               <p className="mb-4">
                 SB
-                <br />
-                
               </p>
             </div>
           </div>

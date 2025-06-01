@@ -9,21 +9,21 @@ import { gsap } from 'gsap'
 import React from 'react'
 
 const mazeLayout = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,0,1],
-  [1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,1],
-  [1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1],
-  [1,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,0,1],
-  [1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1,0,1],
-  [0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,1,0,0,0,0,1],
-  [1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,0,1],
-  [1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0,0,0,1,0,1],
-  [1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,0,1,0,1],
-  [1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,1,0,1],
-  [1,0,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,0,1,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1],
+  [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1],
+  [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1],
+  [1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
+  [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+  [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+  [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
 const CELL_SIZE = 2
@@ -46,7 +46,7 @@ function HedgeMaterial() {
   const textures = [colorMap, normalMap, roughnessMap, aoMap]
   textures.forEach(texture => {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-    texture.repeat.set(1, HEDGE_HEIGHT/2)
+    texture.repeat.set(1, HEDGE_HEIGHT / 2)
   })
 
   return (
@@ -95,7 +95,7 @@ function PhysicalMaze() {
           if (cell === 1) {
             const x = colIndex * CELL_SIZE - mazeLayout[0].length * CELL_SIZE / 2
             const z = rowIndex * CELL_SIZE - mazeLayout.length * CELL_SIZE / 2
-            
+
             return (
               <Wall
                 key={`${colIndex}-${rowIndex}`}
@@ -112,13 +112,17 @@ function PhysicalMaze() {
   )
 }
 
-function Wall({ position, size }) {
-  const [ref] = useBox<THREE.Mesh>(() => ({ 
+type WallProps = {
+  position: [number, number, number]; // or THREE.Vector3 if you're using that
+  size: [number, number, number];
+};
+
+function Wall({ position, size }: WallProps) {
+  const [ref] = useBox<THREE.Mesh>(() => ({
     type: "Static",
     position,
-    args: size
-  }))
-
+    args: size,
+  }));
   return (
     <Box ref={ref} args={size} position={position}>
       <HedgeMaterial />
@@ -127,13 +131,13 @@ function Wall({ position, size }) {
 }
 
 function Ground() {
-  const [ref] = usePlane<THREE.Mesh>(() => ({ 
+  const [ref] = usePlane<THREE.Mesh>(() => ({
     rotation: [-Math.PI / 2, 0, 0],
     position: [0, 0, 0]
   }))
 
   return (
-    <Plane 
+    <Plane
       ref={ref}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, 0, 0]}
@@ -298,8 +302,8 @@ function heuristic(a, b) {
   return Math.abs(a.x - b.x) + Math.abs(a.z - b.z)
 }
 
-function AICharacter({ playerPosition, onCatchPlayer, isGameOver, gameStarted, position}) {
-  const  { scene } = useGLTF('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/guy-rQHtGAZuCkVuRp3Vhi5Wlw2tGuOxbo.glb')
+function AICharacter({ playerPosition, onCatchPlayer, isGameOver, gameStarted, position }) {
+  const { scene } = useGLTF('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/guy-rQHtGAZuCkVuRp3Vhi5Wlw2tGuOxbo.glb')
   const { animations } = useGLTF('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/run-IMT5ko1fHBy6fHfCRENf74yCy3KDiK.glb')
   const { actions, mixer } = useAnimations(animations, scene)
   const characterRef = useRef<THREE.Group>(null)
@@ -683,12 +687,12 @@ function TitleScreen({ onStart }) {
       }
     }
     window.addEventListener('keydown', handleKeyDown)
-    return () =>  window.removeEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onStart])
 
   return (
     <>
-      <Environment 
+      <Environment
         files="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/night4-5uEo5n1aEFtW5SYwlMTy9bglR0dq6O.jpg"
         background
         blur={0.5}
@@ -810,7 +814,7 @@ export default function Component() {
               }} />
             ) : (
               <Physics gravity={[0, -9.81, 0]}>
-                <Environment 
+                <Environment
                   files="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/night4-5uEo5n1aEFtW5SYwlMTy9bglR0dq6O.jpg"
                   background
                   blur={0.5}
@@ -818,15 +822,15 @@ export default function Component() {
                 <ambientLight intensity={0.1} />
                 <pointLight position={[0, HEDGE_HEIGHT * 2, 0]} intensity={0.3} />
                 <PhysicalMaze />
-                <Player 
-                  isGameOver={isGameOver} 
+                <Player
+                  isGameOver={isGameOver}
                   setPlayerPosition={setPlayerPosition}
                   onWin={handleWin}
                   hasLost={hasLost}
                   initialPosition={playerPosition}
                 />
-                <AICharacter 
-                  playerPosition={playerPosition} 
+                <AICharacter
+                  playerPosition={playerPosition}
                   onCatchPlayer={handleGameOver}
                   isGameOver={isGameOver}
                   gameStarted={gameStarted}

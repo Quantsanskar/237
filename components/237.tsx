@@ -870,7 +870,7 @@ export default function Component() {
       <div className="w-full cursor-none h-screen">
         {!gameStarted && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[256px] font-[NightAOE] pointer-events-none text-red-600 text-shadow-lg z-[1000]">
-            237
+            666
           </div>
         )}
         <KeyboardControls

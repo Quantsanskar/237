@@ -1,12 +1,23 @@
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { Canvas, useThree, useFrame, useLoader } from '@react-three/fiber'
-import { Box, Plane, PointerLockControls, KeyboardControls, useKeyboardControls, Environment, PerspectiveCamera, useGLTF, OrbitControls, useAnimations } from '@react-three/drei'
-import { Physics, usePlane, useBox, useSphere } from '@react-three/cannon'
-import * as THREE from 'three'
-import { gsap } from 'gsap'
-import React from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import { Canvas, useThree, useFrame, useLoader } from "@react-three/fiber"
+import {
+  Box,
+  Plane,
+  PointerLockControls,
+  KeyboardControls,
+  useKeyboardControls,
+  Environment,
+  PerspectiveCamera,
+  useGLTF,
+  OrbitControls,
+  useAnimations,
+} from "@react-three/drei"
+import { Physics, usePlane, useBox, useSphere } from "@react-three/cannon"
+import * as THREE from "three"
+import { gsap } from "gsap"
+import React from "react"
 
 const mazeLayout = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -23,7 +34,7 @@ const mazeLayout = [
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1],
   [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
 const CELL_SIZE = 2
@@ -37,14 +48,14 @@ const CHASE_DISTANCE = 1000
 
 function HedgeMaterial() {
   const [colorMap, normalMap, roughnessMap, aoMap] = useLoader(THREE.TextureLoader, [
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_Color-kfFgCRlBHy0CoS5TfgzMVaOT0u8OI4.jpg',
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_NormalGL-UqPfFqqaKR3Fz3QVRE0A3c4JJk0tnM.jpg',
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_Roughness-V6uedmVezVYGOMdoNYrRTuhiJgQ6DH.jpg',
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_AmbientOcclusion-NFblk4lk0n9L4RrLyQ5ERjvoZDEjiw.jpg'
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_Color-kfFgCRlBHy0CoS5TfgzMVaOT0u8OI4.jpg",
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_NormalGL-UqPfFqqaKR3Fz3QVRE0A3c4JJk0tnM.jpg",
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_Roughness-V6uedmVezVYGOMdoNYrRTuhiJgQ6DH.jpg",
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Moss002_1K-JPG_AmbientOcclusion-NFblk4lk0n9L4RrLyQ5ERjvoZDEjiw.jpg",
   ])
 
   const textures = [colorMap, normalMap, roughnessMap, aoMap]
-  textures.forEach(texture => {
+  textures.forEach((texture) => {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping
     texture.repeat.set(1, HEDGE_HEIGHT / 2)
   })
@@ -63,14 +74,14 @@ function HedgeMaterial() {
 
 function GroundMaterial() {
   const [colorMap, roughnessMap, normalMap, aoMap] = useLoader(THREE.TextureLoader, [
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_Color-ftnbZHGFOk6O5BGZf8eTBe2MczgDO5.jpg',
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_Roughness-hHoq0f4iMMKc7q8RMaePPRaQfN3nZg.jpg',
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_NormalGL-sxJSJh3TGj64frb00VuUjcswlH46vj.jpg',
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_AmbientOcclusion-zRyLk8QnKFVb3vQLJby98I88nw1Cm9.jpg'
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_Color-ftnbZHGFOk6O5BGZf8eTBe2MczgDO5.jpg",
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_Roughness-hHoq0f4iMMKc7q8RMaePPRaQfN3nZg.jpg",
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_NormalGL-sxJSJh3TGj64frb00VuUjcswlH46vj.jpg",
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Snow009A_1K-JPG_AmbientOcclusion-zRyLk8QnKFVb3vQLJby98I88nw1Cm9.jpg",
   ])
 
   const textures = [colorMap, roughnessMap, normalMap, aoMap]
-  textures.forEach(texture => {
+  textures.forEach((texture) => {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping
     texture.repeat.set(21, 15)
   })
@@ -90,11 +101,11 @@ function GroundMaterial() {
 function PhysicalMaze() {
   return (
     <group>
-      {mazeLayout.map((row, rowIndex) => (
+      {mazeLayout.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
           if (cell === 1) {
-            const x = colIndex * CELL_SIZE - mazeLayout[0].length * CELL_SIZE / 2
-            const z = rowIndex * CELL_SIZE - mazeLayout.length * CELL_SIZE / 2
+            const x = colIndex * CELL_SIZE - (mazeLayout[0].length * CELL_SIZE) / 2
+            const z = rowIndex * CELL_SIZE - (mazeLayout.length * CELL_SIZE) / 2
 
             return (
               <Wall
@@ -105,24 +116,24 @@ function PhysicalMaze() {
             )
           }
           return null
-        })
-      ))}
+        }),
+      )}
       <Ground />
     </group>
   )
 }
 
 type WallProps = {
-  position: [number, number, number]; // or THREE.Vector3 if you're using that
-  size: [number, number, number];
-};
+  position: [number, number, number]
+  size: [number, number, number]
+}
 
 function Wall({ position, size }: WallProps) {
   const [ref] = useBox<THREE.Mesh>(() => ({
     type: "Static",
     position,
     args: size,
-  }));
+  }))
   return (
     <Box ref={ref} args={size} position={position}>
       <HedgeMaterial />
@@ -133,32 +144,30 @@ function Wall({ position, size }: WallProps) {
 function Ground() {
   const [ref] = usePlane<THREE.Mesh>(() => ({
     rotation: [-Math.PI / 2, 0, 0],
-    position: [0, 0, 0]
+    position: [0, 0, 0],
   }))
 
   return (
-    <Plane
-      ref={ref}
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, 0, 0]}
-      args={[100, 100]}
-    >
+    <Plane ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} args={[100, 100]}>
       <GroundMaterial />
     </Plane>
   )
 }
 
-function FadeEffect({ isGameOver }) {
+type FadeEffectProps = {
+  isGameOver: boolean
+}
+
+function FadeEffect({ isGameOver }: FadeEffectProps) {
   const { scene } = useThree()
   const fadeRef = useRef<THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>>(null)
-  const [opacity, setOpacity] = useState(0)
 
   useEffect(() => {
     if (isGameOver && fadeRef.current && fadeRef.current.material) {
       gsap.to(fadeRef.current.material.uniforms.opacity, {
         value: 1,
         duration: 2,
-        ease: "power2.inOut"
+        ease: "power2.inOut",
       })
     }
   }, [isGameOver])
@@ -171,7 +180,7 @@ function FadeEffect({ isGameOver }) {
         transparent
         depthTest={false}
         uniforms={{
-          opacity: { value: 0 }
+          opacity: { value: 0 },
         }}
         vertexShader={`
           varying vec2 vUv;
@@ -192,13 +201,21 @@ function FadeEffect({ isGameOver }) {
   )
 }
 
-function Player({ isGameOver, setPlayerPosition, onWin, hasLost, initialPosition }) {
+type PlayerProps = {
+  isGameOver: boolean
+  setPlayerPosition: (position: number[]) => void
+  onWin: () => void
+  hasLost: boolean
+  initialPosition: number[]
+}
+
+function Player({ isGameOver, setPlayerPosition, onWin, hasLost, initialPosition }: PlayerProps) {
   const { camera } = useThree()
   const [ref, api] = useSphere(() => ({
     mass: 1,
     type: "Dynamic",
-    position: initialPosition,
-    args: [PLAYER_RADIUS]
+    position: initialPosition as [number, number, number],
+    args: [PLAYER_RADIUS],
   }))
 
   const [, get] = useKeyboardControls()
@@ -210,7 +227,11 @@ function Player({ isGameOver, setPlayerPosition, onWin, hasLost, initialPosition
 
       const frontVector = new THREE.Vector3(0, 0, Number(backward) - Number(forward))
       const sideVector = new THREE.Vector3(Number(left) - Number(right), 0, 0)
-      direction.subVectors(frontVector, sideVector).normalize().multiplyScalar(MOVEMENT_SPEED).applyEuler(camera.rotation)
+      direction
+        .subVectors(frontVector, sideVector)
+        .normalize()
+        .multiplyScalar(MOVEMENT_SPEED)
+        .applyEuler(camera.rotation)
 
       api.velocity.set(direction.x, 0, direction.z)
 
@@ -245,21 +266,21 @@ function Player({ isGameOver, setPlayerPosition, onWin, hasLost, initialPosition
   return <mesh ref={ref} />
 }
 
-function findPath(start, end) {
+function findPath(start: number[], end: number[]) {
   const startNode = { x: Math.round(start[0] / CELL_SIZE), z: Math.round(start[2] / CELL_SIZE) }
   const endNode = { x: Math.round(end[0] / CELL_SIZE), z: Math.round(end[2] / CELL_SIZE) }
 
   const openSet = [startNode]
-  const closedSet = []
-  const cameFrom = {}
-  const gScore = { [`${startNode.x},${startNode.z}`]: 0 }
-  const fScore = { [`${startNode.x},${startNode.z}`]: heuristic(startNode, endNode) }
+  const closedSet: (typeof startNode)[] = []
+  const cameFrom: Record<string, typeof startNode> = {}
+  const gScore: Record<string, number> = { [`${startNode.x},${startNode.z}`]: 0 }
+  const fScore: Record<string, number> = { [`${startNode.x},${startNode.z}`]: heuristic(startNode, endNode) }
 
   while (openSet.length > 0) {
-    let current = openSet.reduce((a, b) => fScore[`${a.x},${a.z}`] < fScore[`${b.x},${b.z}`] ? a : b)
+    let current = openSet.reduce((a, b) => (fScore[`${a.x},${a.z}`] < fScore[`${b.x},${b.z}`] ? a : b))
 
     if (current.x === endNode.x && current.z === endNode.z) {
-      let path = []
+      const path: number[][] = []
       while (current) {
         path.push([current.x * CELL_SIZE, 0, current.z * CELL_SIZE])
         current = cameFrom[`${current.x},${current.z}`]
@@ -274,16 +295,16 @@ function findPath(start, end) {
       { x: current.x + 1, z: current.z },
       { x: current.x - 1, z: current.z },
       { x: current.x, z: current.z + 1 },
-      { x: current.x, z: current.z - 1 }
+      { x: current.x, z: current.z - 1 },
     ]
 
-    for (let neighbor of neighbors) {
-      if (closedSet.some(node => node.x === neighbor.x && node.z === neighbor.z)) continue
+    for (const neighbor of neighbors) {
+      if (closedSet.some((node) => node.x === neighbor.x && node.z === neighbor.z)) continue
       if (isWall(neighbor.x * CELL_SIZE, neighbor.z * CELL_SIZE)) continue
 
       const tentativeGScore = gScore[`${current.x},${current.z}`] + 1
 
-      if (!openSet.some(node => node.x === neighbor.x && node.z === neighbor.z)) {
+      if (!openSet.some((node) => node.x === neighbor.x && node.z === neighbor.z)) {
         openSet.push(neighbor)
       } else if (tentativeGScore >= gScore[`${neighbor.x},${neighbor.z}`]) {
         continue
@@ -298,21 +319,34 @@ function findPath(start, end) {
   return null
 }
 
-function heuristic(a, b) {
+function heuristic(a: { x: number; z: number }, b: { x: number; z: number }) {
   return Math.abs(a.x - b.x) + Math.abs(a.z - b.z)
 }
 
-function AICharacter({ playerPosition, onCatchPlayer, isGameOver, gameStarted, position }) {
-  const { scene } = useGLTF('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/guy-rQHtGAZuCkVuRp3Vhi5Wlw2tGuOxbo.glb')
-  const { animations } = useGLTF('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/run-IMT5ko1fHBy6fHfCRENf74yCy3KDiK.glb')
+type AICharacterProps = {
+  playerPosition: number[]
+  onCatchPlayer: () => void
+  isGameOver: boolean
+  gameStarted: boolean
+  position: number[]
+}
+
+function AICharacter({ playerPosition, onCatchPlayer, isGameOver, gameStarted, position }: AICharacterProps) {
+  const { scene } = useGLTF(
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/guy-rQHtGAZuCkVuRp3Vhi5Wlw2tGuOxbo.glb",
+  )
+  const { animations } = useGLTF(
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/run-IMT5ko1fHBy6fHfCRENf74yCy3KDiK.glb",
+  )
   const { actions, mixer } = useAnimations(animations, scene)
   const characterRef = useRef<THREE.Group>(null)
-  const [path, setPath] = useState([])
+  const [path, setPath] = useState<number[][]>([])
   const { camera } = useThree()
   const [listener] = useState(() => new THREE.AudioListener())
   const [sound] = useState(() => new THREE.PositionalAudio(listener))
-  const audioLoader = new THREE.AudioLoader()
-  const audioUrl = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/audio-SuYObN9rmzlwaVhFvOWWY1aaSSC7uw.mp3'
+
+  const audioLoader = useMemo(() => new THREE.AudioLoader(), [])
+  const audioUrl = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/audio-SuYObN9rmzlwaVhFvOWWY1aaSSC7uw.mp3"
 
   useEffect(() => {
     if (actions["Armature|mixamo.com|Layer0"]) {
@@ -339,7 +373,7 @@ function AICharacter({ playerPosition, onCatchPlayer, isGameOver, gameStarted, p
     }
 
     return () => {
-      // sound.stop()
+      sound.stop()
     }
   }, [gameStarted, isGameOver, audioLoader, sound, audioUrl])
 
@@ -367,10 +401,10 @@ function AICharacter({ playerPosition, onCatchPlayer, isGameOver, gameStarted, p
         characterRef.current.lookAt(targetPosition)
       }
 
-      const aiMazeX = Math.floor((currentPosition.x + mazeLayout[0].length * CELL_SIZE / 2) / CELL_SIZE)
-      const aiMazeZ = Math.floor((currentPosition.z + mazeLayout.length * CELL_SIZE / 2) / CELL_SIZE)
-      const playerMazeX = Math.floor((playerVector.x + mazeLayout[0].length * CELL_SIZE / 2) / CELL_SIZE)
-      const playerMazeZ = Math.floor((playerVector.z + mazeLayout.length * CELL_SIZE / 2) / CELL_SIZE)
+      const aiMazeX = Math.floor((currentPosition.x + (mazeLayout[0].length * CELL_SIZE) / 2) / CELL_SIZE)
+      const aiMazeZ = Math.floor((currentPosition.z + (mazeLayout.length * CELL_SIZE) / 2) / CELL_SIZE)
+      const playerMazeX = Math.floor((playerVector.x + (mazeLayout[0].length * CELL_SIZE) / 2) / CELL_SIZE)
+      const playerMazeZ = Math.floor((playerVector.z + (mazeLayout.length * CELL_SIZE) / 2) / CELL_SIZE)
 
       if (aiMazeX === playerMazeX && aiMazeZ === playerMazeZ && !isGameOver) {
         onCatchPlayer()
@@ -392,29 +426,25 @@ function AICharacter({ playerPosition, onCatchPlayer, isGameOver, gameStarted, p
   )
 }
 
-function getRandomEmptyPosition() {
+function getRandomEmptyPosition(): number[] {
   let x, z
   do {
     x = Math.floor(Math.random() * (mazeLayout[0].length - 2)) + 1
     z = Math.floor(Math.random() * (mazeLayout.length - 2)) + 1
   } while (mazeLayout[z][x] !== 0 || (Math.abs(x) < 2 && Math.abs(z) < 2))
 
-  return [
-    (x - mazeLayout[0].length / 2) * CELL_SIZE,
-    0,
-    (z - mazeLayout.length / 2) * CELL_SIZE
-  ]
+  return [(x - mazeLayout[0].length / 2) * CELL_SIZE, 0, (z - mazeLayout.length / 2) * CELL_SIZE]
 }
 
-function isWall(x, z) {
-  const mazeX = Math.floor((x + mazeLayout[0].length * CELL_SIZE / 2) / CELL_SIZE)
-  const mazeZ = Math.floor((z + mazeLayout.length * CELL_SIZE / 2) / CELL_SIZE)
+function isWall(x: number, z: number) {
+  const mazeX = Math.floor((x + (mazeLayout[0].length * CELL_SIZE) / 2) / CELL_SIZE)
+  const mazeZ = Math.floor((z + (mazeLayout.length * CELL_SIZE) / 2) / CELL_SIZE)
   return mazeLayout[mazeZ] && mazeLayout[mazeZ][mazeX] === 1
 }
 
 const CirclePointsMaterial = {
   uniforms: {
-    color: { value: new THREE.Color('white') },
+    color: { value: new THREE.Color("white") },
     opacity: { value: 0.8 },
   },
   vertexShader: `
@@ -438,62 +468,49 @@ const CirclePointsMaterial = {
     }
   `,
   transparent: true,
-};
+}
 
 function Snow() {
-  const count = 500000;
+  // Reduced particle count for better performance
+  const count = 50000
   const [positions, sizes] = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
+    const positions = new Float32Array(count * 3)
+    const sizes = new Float32Array(count)
 
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 100;
-      positions[i * 3 + 1] = Math.random() * 50;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
-      sizes[i] = Math.random() * 0.1 + 0.05;
+      positions[i * 3] = (Math.random() - 0.5) * 100
+      positions[i * 3 + 1] = Math.random() * 50
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 100
+      sizes[i] = Math.random() * 0.1 + 0.05
     }
 
-    return [positions, sizes];
-  }, [count]);
+    return [positions, sizes]
+  }, [count])
 
-  const particlesRef = useRef<THREE.Points>(null);
+  const particlesRef = useRef<THREE.Points>(null)
 
   useFrame(() => {
     if (particlesRef.current) {
-      const positions = particlesRef.current.geometry.attributes.position.array;
+      const positions = particlesRef.current.geometry.attributes.position.array as Float32Array
       for (let i = 0; i < count; i++) {
-        positions[i * 3 + 1] -= 0.1;
+        positions[i * 3 + 1] -= 0.1
         if (positions[i * 3 + 1] < 0) {
-          positions[i * 3 + 1] = 50;
+          positions[i * 3 + 1] = 50
         }
       }
-      particlesRef.current.geometry.attributes.position.needsUpdate = true;
+      particlesRef.current.geometry.attributes.position.needsUpdate = true
     }
-  });
+  })
 
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-size"
-          count={sizes.length}
-          array={sizes}
-          itemSize={1}
-        />
+        <bufferAttribute attach="attributes-position" count={positions.length / 3} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-size" count={sizes.length} array={sizes} itemSize={1} />
       </bufferGeometry>
-      <shaderMaterial
-        args={[CirclePointsMaterial]}
-        transparent
-        depthWrite={false}
-      />
+      <shaderMaterial args={[CirclePointsMaterial]} transparent depthWrite={false} />
     </points>
-  );
+  )
 }
 
 function Snow2D() {
@@ -515,75 +532,123 @@ function Snow2D() {
 }
 
 function TitleScreenMusic() {
-  const [audio] = useState(() => new Audio('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20(1)-WBaaqUWM8OrFK7H8xr5UBLzBHG7ibZ.mp3'))
+  const [audio] = useState(() => {
+    if (typeof window !== "undefined") {
+      return new Audio(
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20(1)-WBaaqUWM8OrFK7H8xr5UBLzBHG7ibZ.mp3",
+      )
+    }
+    return null
+  })
 
   useEffect(() => {
-    audio.loop = true
-    audio.volume = 0.5
-    audio.play()
-    return () => {
-      audio.pause()
-      audio.currentTime = 0
+    if (audio) {
+      audio.loop = true
+      audio.volume = 0.5
+      audio.play().catch(() => {
+        // Handle autoplay restrictions
+      })
+      return () => {
+        audio.pause()
+        audio.currentTime = 0
+      }
     }
   }, [audio])
 
   return null
 }
 
-function BackgroundMusic({ gameStarted, isGameOver }) {
-  const audioRef = useRef(null)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled-ooMw6BygICWxfHAwu8ZiR6liNWt0mQ.mp3');
-      audioRef.current.loop = true;
-    }
-  }, []);
+type BackgroundMusicProps = {
+  gameStarted: boolean
+  isGameOver: boolean
+}
+
+function BackgroundMusic({ gameStarted, isGameOver }: BackgroundMusicProps) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    if (gameStarted && !isGameOver) {
+    if (typeof window !== "undefined") {
+      audioRef.current = new Audio(
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled-ooMw6BygICWxfHAwu8ZiR6liNWt0mQ.mp3",
+      )
       audioRef.current.loop = true
-      audioRef.current.volume = 0.5
-      audioRef.current.play()
-    } else {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
+    }
+  }, [])
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (gameStarted && !isGameOver) {
+        audioRef.current.loop = true
+        audioRef.current.volume = 0.5
+        audioRef.current.play().catch(() => {
+          // Handle autoplay restrictions
+        })
+      } else {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
     }
     return () => {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
     }
-  }, [audioRef, gameStarted, isGameOver])
+  }, [gameStarted, isGameOver])
 
   return null
 }
 
-function PhantomChaseMusic({ isGameOver }) {
-  const [audio] = useState(() => new Audio('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Phantom%20Chase-NnoKn8Jdxb7NZ5TTrJuA6nYSlxSiGu.mp3'))
+type PhantomChaseMusicProps = {
+  isGameOver: boolean
+}
+
+function PhantomChaseMusic({ isGameOver }: PhantomChaseMusicProps) {
+  const [audio] = useState(() => {
+    if (typeof window !== "undefined") {
+      return new Audio(
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Phantom%20Chase-NnoKn8Jdxb7NZ5TTrJuA6nYSlxSiGu.mp3",
+      )
+    }
+    return null
+  })
 
   useEffect(() => {
-    if (isGameOver) {
+    if (audio && isGameOver) {
       audio.loop = true
       audio.volume = 0.5
-      audio.play()
+      audio.play().catch(() => {
+        // Handle autoplay restrictions
+      })
     }
     return () => {
-      audio.pause()
-      audio.currentTime = 0
+      if (audio) {
+        audio.pause()
+        audio.currentTime = 0
+      }
     }
   }, [audio, isGameOver])
 
   return null
 }
 
-function Timer({ onGameOver }) {
+type TimerProps = {
+  onGameOver: () => void
+}
+
+function Timer({ onGameOver }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState(60)
+
+  const handleGameOver = useCallback(() => {
+    onGameOver()
+  }, [onGameOver])
 
   useEffect(() => {
     const timerId = setInterval(() => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
           clearInterval(timerId)
-          onGameOver()
+          handleGameOver()
           return 0
         }
         return prevTime - 1
@@ -591,7 +656,7 @@ function Timer({ onGameOver }) {
     }, 1000)
 
     return () => clearInterval(timerId)
-  }, [])
+  }, [handleGameOver])
 
   return (
     <div className="absolute top-20 left-1/2 -translate-x-1/2 text-[48px] font-[NightAOE] text-red-600 text-shadow-lg z-[1000]">
@@ -600,15 +665,19 @@ function Timer({ onGameOver }) {
   )
 }
 
-function GameOver({ onRestart }) {
+type GameOverProps = {
+  onRestart: () => void
+}
+
+function GameOver({ onRestart }: GameOverProps) {
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.code === 'Space') {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space") {
         onRestart()
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [onRestart])
 
   return (
@@ -657,14 +726,18 @@ function Credits() {
               <p className="mb-8">Hotel model by</p>
             </div>
             <div className="text-left">
-              <p className="mb-4">Chris Tate</p>
-              <p className="mb-4">v0</p>
-              <p className="mb-4">Suno</p>
-              <p className="mb-4">Eleven Labs</p>
-              <p className="mb-4">Blockade Labs</p>
-              <p className="mb-4">ambientCG</p>
-              <p className="mb-4">Mixamo</p>
-              <p className="mb-4">@A9908244 Sketchfab<br />@DJohnson1 DeviantArt</p>
+              <p className="mb-4">Sanskar Bhardwaj</p>
+              <p className="mb-4">SB</p>
+              <p className="mb-4">SB</p>
+              <p className="mb-4">SB</p>
+              <p className="mb-4">SB</p>
+              <p className="mb-4">SB</p>
+              <p className="mb-4">SB</p>
+              <p className="mb-4">
+                SB
+                <br />
+                
+              </p>
             </div>
           </div>
         </div>
@@ -673,21 +746,27 @@ function Credits() {
   )
 }
 
-function TitleScreen({ onStart }) {
+type TitleScreenProps = {
+  onStart: () => void
+}
+
+function TitleScreen({ onStart }: TitleScreenProps) {
   const { scene } = useThree()
-  const { scene: hotelScene } = useGLTF('https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/models/hotel.glb')
-  const { scene: mountainsScene } = useGLTF('https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/rocky_mountains.glb')
+  const { scene: hotelScene } = useGLTF("https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/models/hotel.glb")
+  const { scene: mountainsScene } = useGLTF(
+    "https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/rocky_mountains.glb",
+  )
   const hotelRef = useRef<THREE.Group>(null)
   const mountainsRef = useRef<THREE.Group>(null)
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.code === 'Space') {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space") {
         onStart()
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [onStart])
 
   return (
@@ -698,12 +777,7 @@ function TitleScreen({ onStart }) {
         blur={0.5}
       />
       <PerspectiveCamera makeDefault position={[0, 2, 8]} />
-      <OrbitControls
-        enableZoom
-        enablePan={false}
-        autoRotate
-        autoRotateSpeed={0.5}
-      />
+      <OrbitControls enableZoom enablePan={false} autoRotate autoRotateSpeed={0.5} />
       <group ref={mountainsRef}>
         <primitive object={mountainsScene} scale={100} position={[-500, 469, -500]} />
       </group>
@@ -719,12 +793,14 @@ function TitleScreen({ onStart }) {
 }
 
 function Hotel() {
-  const { scene } = useGLTF('https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/models/hotel.glb')
+  const { scene } = useGLTF("https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/models/hotel.glb")
   return <primitive object={scene} scale={1} rotation={[0, Math.PI / 1.5, 0]} position={[-50, 0, 0]} />
 }
 
 function Mountain() {
-  const { scene: mountainsScene } = useGLTF('https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/rocky_mountains.glb')
+  const { scene: mountainsScene } = useGLTF(
+    "https://43fzijkfwg2zmvr5.public.blob.vercel-storage.com/rocky_mountains.glb",
+  )
   return <primitive object={mountainsScene} scale={100} position={[-500, 469, -500]} />
 }
 
@@ -736,24 +812,24 @@ export default function Component() {
   const [hasWon, setHasWon] = useState(false)
   const [hasLost, setHasLost] = useState(false)
 
-  const handleGameOver = () => {
+  const handleGameOver = useCallback(() => {
     setIsGameOver(true)
     setHasLost(true)
-  }
+  }, [])
 
-  const handleRestart = () => {
+  const handleRestart = useCallback(() => {
     setIsGameOver(false)
     setHasWon(false)
     setHasLost(false)
     setPlayerPosition([0, PLAYER_HEIGHT, 0])
     setAIPosition(getRandomEmptyPosition())
     setGameStarted(true)
-  }
+  }, [])
 
-  const handleWin = () => {
+  const handleWin = useCallback(() => {
     setHasWon(true)
     setIsGameOver(true)
-  }
+  }, [])
 
   return (
     <>
@@ -804,14 +880,16 @@ export default function Component() {
             { name: "forward", keys: ["ArrowUp", "w", "W"] },
             { name: "backward", keys: ["ArrowDown", "s", "S"] },
             { name: "left", keys: ["ArrowLeft", "a", "A"] },
-            { name: "right", keys: ["ArrowRight", "d", "D"] }
+            { name: "right", keys: ["ArrowRight", "d", "D"] },
           ]}
         >
           <Canvas camera={{ fov: 75, near: 0.1, far: 1000, position: [0, PLAYER_HEIGHT, 0] }}>
             {!gameStarted ? (
-              <TitleScreen onStart={() => {
-                setGameStarted(true)
-              }} />
+              <TitleScreen
+                onStart={() => {
+                  setGameStarted(true)
+                }}
+              />
             ) : (
               <Physics gravity={[0, -9.81, 0]}>
                 <Environment
